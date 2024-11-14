@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <tchar.h>
 
+#include "Game.h"
+
 // Global variables
 static TCHAR szWindowClass[] = _T("DesktopApp");
 static TCHAR szTitle[] = _T("Windows Desktop Guided Tour Application");
@@ -9,7 +11,9 @@ HINSTANCE hInst;
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-//#define OnMenuClicked 1
+#define OnNewGameClicked 1
+
+#define GAME Game::GetGame()
 
 namespace BTN {
     constexpr unsigned short SIZE = 80;
@@ -17,17 +21,24 @@ namespace BTN {
 }
 
 namespace MAINWND {
-    constexpr unsigned short TOP = 20;
+    constexpr unsigned short TOP = 63;
+    constexpr unsigned short LEFT = 20;
     constexpr unsigned short MARGIN = 10;
-    constexpr unsigned short HEIGHT = BTN::SIZE * 3 + BTN::SPACING * 2 + MARGIN * 2 + 20;
-    constexpr unsigned short WIDTH = BTN::SIZE * 3 + BTN::SPACING * 2 + MARGIN * 2 + 43;
+    unsigned short HEIGHT = 
+        BTN::SIZE * GAME.RowN() +
+        BTN::SPACING * (GAME.RowN() - 1) +
+        MARGIN * 2 + TOP;
+    unsigned short WIDTH = 
+        BTN::SIZE * GAME.ColN() +
+        BTN::SPACING * (GAME.ColN() - 1) +
+        MARGIN * 2 + LEFT;
 }
 
-//void WndAddMenus(HWND hWnd) {
-//    HMENU RootMenu = CreateMenu();
-//    AppendMenu(RootMenu, MF_STRING, OnMenuClicked, _T("My menu"));
-//    SetMenu(hWnd, RootMenu);
-//}
+void WndAddMenus(HWND hWnd) {
+    HMENU RootMenu = CreateMenu();
+    AppendMenu(RootMenu, MF_STRING, OnNewGameClicked, _T("New game"));
+    SetMenu(hWnd, RootMenu);
+}
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow) {
     WNDCLASSEX wcex;
@@ -57,7 +68,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         szTitle,
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        MAINWND::HEIGHT, MAINWND::WIDTH, 
+        MAINWND::WIDTH, MAINWND::HEIGHT, 
         NULL,
         NULL,
         hInstance,
@@ -70,8 +81,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     }
 
     // Creating buttons
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    for (int i = 0; i < Game::GetGame().ColN(); i++) {
+        for (int j = 0; j < Game::GetGame().RowN(); j++) {
             CreateWindowW(
                 L"BUTTON",  // Predefined class; Unicode assumed 
                 L"",      // Button text 
@@ -86,6 +97,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
                 NULL);      // Pointer not needed
         }
     }
+
+    WndAddMenus(hWnd);
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
@@ -102,9 +115,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_COMMAND:
-        /*if (LOWORD(wParam) == OnMenuClicked) {
-            MessageBox(hWnd, L"Menu has been clicked!", L"Menu works", MB_OK);
-        }*/
+        if (LOWORD(wParam) == OnNewGameClicked) {
+            MessageBox(hWnd, L"New game has been clicked!", L"New game", MB_OK);
+        }
         break;
 
     case WM_PAINT:
