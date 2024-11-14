@@ -2,6 +2,7 @@
 #include <tchar.h>
 
 #include "Game.h"
+#include <string>
 
 // Global variables
 static TCHAR szWindowClass[] = _T("DesktopApp");
@@ -11,9 +12,15 @@ HINSTANCE hInst;
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-#define OnNewGameClicked 1
-
 #define GAME Game::GetGame()
+
+constexpr auto OnNewGameClicked = 1;
+
+constexpr auto BUTTON_ID_OFFSET = 100;
+auto GetButtonId(const int row, const int col) {
+    return BUTTON_ID_OFFSET + row * GAME.ColN() + col;
+}
+
 
 namespace BTN {
     constexpr unsigned short SIZE = 80;
@@ -38,6 +45,16 @@ void WndAddMenus(HWND hWnd) {
     HMENU RootMenu = CreateMenu();
     AppendMenu(RootMenu, MF_STRING, OnNewGameClicked, _T("New game"));
     SetMenu(hWnd, RootMenu);
+}
+
+void WndUpdateCells(HWND hWnd) {
+    for (int i = 0; i < GAME.RowN(); i++) {
+        for (int j = 0; j < GAME.ColN(); j++) {
+            const int buttonId = GetButtonId(i, j);
+            std::wstring buttonText(1, GAME[i][j]);
+            SetDlgItemTextW(hWnd, buttonId, buttonText.c_str());
+        }
+    }
 }
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow) {
@@ -80,21 +97,30 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         return 1;
     }
 
+    HFONT hCellFont = CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
+
     // Creating buttons
-    for (int i = 0; i < Game::GetGame().ColN(); i++) {
-        for (int j = 0; j < Game::GetGame().RowN(); j++) {
-            CreateWindowW(
+    for (int i = 0; i < GAME.RowN(); i++) {
+        for (int j = 0; j < GAME.ColN(); j++) {
+            std::wstring buttonText(1, GAME[i][j]);
+            int buttonId = GetButtonId(i, j);
+            HWND buttonHandle = CreateWindowW(
                 L"BUTTON",  // Predefined class; Unicode assumed 
-                L"",      // Button text 
+                buttonText.c_str(), // Button text 
                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Styles 
-                MAINWND::MARGIN + i * (BTN::SIZE + BTN::SPACING),         // x position 
-                MAINWND::MARGIN + j * (BTN::SIZE + BTN::SPACING),         // y position 
+                MAINWND::MARGIN + j * (BTN::SIZE + BTN::SPACING),         // x position 
+                MAINWND::MARGIN + i * (BTN::SIZE + BTN::SPACING),         // y position 
                 BTN::SIZE,  // Button width
                 BTN::SIZE,  // Button height
                 hWnd,       // Parent window
-                NULL,       // No menu
+                (HMENU)buttonId,
                 (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE),
-                NULL);      // Pointer not needed
+                NULL // Pointer not needed
+            );      
+            
+            SendMessage(buttonHandle, WM_SETFONT, (WPARAM)hCellFont, TRUE);
         }
     }
 
@@ -112,14 +138,39 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     return (int)msg.wParam;
 }
 
+void HandleCellClick(HWND hWnd, const int row, const int col) {
+    if (GAME[row][col] != ' ')
+        return;
+
+    GAME.Set(row, col, GAME.CELL_CROSS);
+    WndUpdateCells(hWnd);
+    
+};
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_COMMAND:
+    {
         if (LOWORD(wParam) == OnNewGameClicked) {
-            MessageBox(hWnd, L"New game has been clicked!", L"New game", MB_OK);
+            GAME.ResetField();
+            WndUpdateCells(hWnd);
+            MessageBox(hWnd, L"Field has been reset!", L"New game", MB_OK);
+        }
+
+        else if (HIWORD(wParam) == BN_CLICKED) {
+            int buttonId = LOWORD(wParam);
+            
+            const int id = buttonId - BUTTON_ID_OFFSET;
+            if (id < 0 || id >= GAME.RowN() * GAME.ColN()) {
+                break; // incorrect buttonId
+            }
+
+            const int row = id / GAME.ColN();  
+            const int col = id % GAME.ColN();
+            HandleCellClick(hWnd, row, col);
         }
         break;
-
+    }
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
