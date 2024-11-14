@@ -97,7 +97,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         return 1;
     }
 
-    HFONT hCellFont = CreateFont(30, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    const short FontSize = 40;
+    HFONT hCellFont = CreateFont(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
 
@@ -142,7 +143,9 @@ void HandleCellClick(HWND hWnd, const int row, const int col) {
     if (GAME[row][col] != ' ')
         return;
 
-    GAME.Set(row, col, GAME.CELL_CROSS);
+    GAME.Set(row, col, GAME.CELL_X);
+    GAME.MakeAIMove();
+
     WndUpdateCells(hWnd);
     
 };
@@ -156,7 +159,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             WndUpdateCells(hWnd);
             MessageBox(hWnd, L"Field has been reset!", L"New game", MB_OK);
         }
-
+        
         else if (HIWORD(wParam) == BN_CLICKED) {
             int buttonId = LOWORD(wParam);
             
