@@ -140,14 +140,29 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 }
 
 void HandleCellClick(HWND hWnd, const int row, const int col) {
-    if (GAME[row][col] != ' ')
-        return;
+    if (GAME[row][col] != ' ') return;
+    if (GAME.lastState != Ongoing) return;
+ 
+    // User move
+    const Cell cell(row, col, GAME.CELL_X);
 
-    GAME.Set(row, col, GAME.CELL_X);
-    GAME.MakeAIMove();
-
+    GAME.Set(cell);
     WndUpdateCells(hWnd);
-    
+    if (GAME.GetGameState(cell) == PlayerWin) {
+        MessageBox(hWnd, L"You won!", L":)", MB_OK);
+        return;
+    }
+
+    // AI move
+    GameState gameState = GAME.MakeAIMove();
+    WndUpdateCells(hWnd);
+    if (gameState == AIWin) {
+        MessageBox(hWnd, L"You lost!", L":(", MB_OK);
+    }
+    else if (gameState == Tie) {
+        MessageBox(hWnd, L"Tie!", L":|", MB_OK);
+    }
+
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -157,7 +172,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         if (LOWORD(wParam) == OnNewGameClicked) {
             GAME.ResetField();
             WndUpdateCells(hWnd);
-            MessageBox(hWnd, L"Field has been reset!", L"New game", MB_OK);
+            //MessageBox(hWnd, L"Field has been reset!", L"New game", MB_OK);
         }
         
         else if (HIWORD(wParam) == BN_CLICKED) {
