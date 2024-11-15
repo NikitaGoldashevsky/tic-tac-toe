@@ -4,7 +4,7 @@ Game::Game() {
 	ResetField();
 }
 
-bool Game::HorizLineCheck(const Cell& _cell) {
+bool Game::HorizLineCheck(const Cell& _cell) const {
 	const auto [_row, _col, _val] = _cell;
 	int horizLineLen = 1;
 	const int rowN = RowN();
@@ -23,7 +23,7 @@ bool Game::HorizLineCheck(const Cell& _cell) {
 	return horizLineLen >= lineLenWinCond;
 }
 
-bool Game::VertLineCheck(const Cell& _cell) {
+bool Game::VertLineCheck(const Cell& _cell) const {
 	const auto [_row, _col, _val] = _cell;
 	int vertLineLen = 1;
 	const int rowN = RowN();
@@ -42,7 +42,7 @@ bool Game::VertLineCheck(const Cell& _cell) {
 	return vertLineLen >= lineLenWinCond;
 }
 
-bool Game::DiagLinesCheck(const Cell& _cell) {
+bool Game::DiagLinesCheck(const Cell& _cell) const {
 	const auto [_row, _col, _val] = _cell;
 	const int rowN = RowN();
 	const int colN = ColN();
@@ -76,21 +76,21 @@ bool Game::DiagLinesCheck(const Cell& _cell) {
 	return false;
 }
 
-bool Game::CheckWin(const Cell& _cell) {
+bool Game::CheckWin(const Cell& _cell) const {
 	return HorizLineCheck(_cell) ||
 		VertLineCheck(_cell) ||
 		DiagLinesCheck(_cell);
 }
 
-const char Game::GetVal(const int _row, const int _col) {
+const char Game::GetVal(const int _row, const int _col) const {
 	return operator[](_row)[_col];
 }
 
-constexpr const short Game::RowN() {
+constexpr const short Game::RowN() const {
 	return m_rowN;
 }
 
-constexpr const short Game::ColN() {
+constexpr const short Game::ColN() const {
 	return m_colN;
 }
 
@@ -99,7 +99,7 @@ Game& Game::GetGame() {
 	return m_instance;
 }
 
-const std::array<char, Game::m_colN>& Game::operator [] (const int _row) {
+const std::array<char, Game::m_colN>& Game::operator [] (const int _row) const {
 	return m_field[_row];
 }
 

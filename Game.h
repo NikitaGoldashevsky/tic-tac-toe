@@ -8,24 +8,25 @@
 #include <iostream>
 
 
-const static enum AIDifficulty {
+static const enum AIDifficulty {
 	Easy,
 	Normal,
 	Harrd
 };
 
-const static enum GameState {
+static const enum GameState {
 	Ongoing,
 	PlayerWin,
 	AIWin,
 	Tie
 };
 
-const struct Cell {
+static const struct Cell {
 	const int row;
 	const int col;
 	const char val;
 };
+
 
 class Game {
 private:
@@ -38,15 +39,15 @@ private:
 
 	Game();
 
-	bool HorizLineCheck(const Cell& _cell);
+	bool HorizLineCheck(const Cell& _cell) const;
 
-	bool VertLineCheck(const Cell& _cell);
+	bool VertLineCheck(const Cell& _cell) const;
 
-	bool DiagLinesCheck(const Cell& _cell);
+	bool DiagLinesCheck(const Cell& _cell) const;
 
-	bool CheckWin(const Cell& _cell);
+	bool CheckWin(const Cell& _cell) const;
 
-	const char GetVal(const int _row, const int _col);
+	const char GetVal(const int _row, const int _col) const;
 
 public:
 	constexpr static char CELL_BLANK = ' ';
@@ -55,13 +56,13 @@ public:
 
 	GameState lastState = Ongoing;
 
-	constexpr const short RowN();
+	constexpr const short RowN() const;
 
-	constexpr const short ColN();
+	constexpr const short ColN() const;
 
 	static Game& GetGame();
 
-	const std::array<char, m_colN>& operator [] (const int _row);
+	const std::array<char, Game::m_colN>& operator[](const int _row) const;
 
 	void ResetField();
 
