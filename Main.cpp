@@ -6,7 +6,7 @@
 
 // Global variables
 static TCHAR szWindowClass[] = _T("DesktopApp");
-static TCHAR szTitle[] = _T("Windows Desktop Guided Tour Application");
+static TCHAR szTitle[] = _T("Tic-Tac-Toe");
 HINSTANCE hInst;
 
 // Forward declarations of functions included in this code module:
@@ -79,12 +79,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     hInst = hInstance;
 
+    const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    const int wndPosX = (screenWidth - MAINWND::WIDTH) / 2;
+    const int wndPosY = (screenHeight - MAINWND::HEIGHT) / 2;
+
     HWND hWnd = CreateWindowEx(
         WS_EX_OVERLAPPEDWINDOW,
         szWindowClass,
         szTitle,
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT,
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // No WS_THICKFRAME
+        wndPosX, wndPosY,
         MAINWND::WIDTH, MAINWND::HEIGHT, 
         NULL,
         NULL,
@@ -162,7 +167,6 @@ void HandleCellClick(HWND hWnd, const int row, const int col) {
     else if (gameState == Tie) {
         MessageBox(hWnd, L"Tie!", L":|", MB_OK);
     }
-
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
