@@ -27,6 +27,12 @@ static const struct Cell {
 	const char val;
 };
 
+static struct Move {
+	const int row;
+	const int col;
+	const int score;
+};
+
 
 class Game {
 private:
@@ -48,6 +54,8 @@ private:
 	bool CheckWin(const Cell& _cell) const;
 
 	const char GetVal(const int _row, const int _col) const;
+
+	GameState MakeRandomMove(const AIDifficulty _AIDiff = AIDifficulty::Normal);
 
 public:
 	constexpr static char CELL_BLANK = ' ';

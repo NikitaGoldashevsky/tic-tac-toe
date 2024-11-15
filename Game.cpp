@@ -127,7 +127,10 @@ void Game::Set(const Cell& _cell) {
 
 GameState Game::MakeAIMove(const AIDifficulty _AIDiff) {
 	// AI's moves are random (for now)
+	return MakeRandomMove(_AIDiff);
+}
 
+GameState Game::MakeRandomMove(const AIDifficulty _AIDiff) {
 	const auto FPCountBlank = [this]() -> size_t {
 		size_t blankCount = 0;
 		for (int i = 0; i < RowN(); i++) {
