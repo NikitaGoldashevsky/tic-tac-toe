@@ -21,7 +21,6 @@ auto GetButtonId(const int row, const int col) {
     return BUTTON_ID_OFFSET + row * GAME.ColN() + col;
 }
 
-
 namespace BTN {
     constexpr unsigned short SIZE = 80;
     constexpr unsigned short SPACING = 5;
