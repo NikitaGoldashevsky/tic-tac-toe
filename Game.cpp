@@ -126,8 +126,17 @@ void Game::Set(const Cell& _cell) {
 }
 
 GameState Game::MakeAIMove(const AIDifficulty _AIDiff) {
-	// AI's moves are random (for now)
-	return MakeRandomMove(_AIDiff);
+	//return MakeRandomMove(_AIDiff);
+	Move bestMove = BestMove(_AIDiff);
+
+	if (bestMove.row == -1 || bestMove.col == -1) {
+		lastState = Tie;
+		return Tie;
+	}
+
+	const Cell aiMove(bestMove.row, bestMove.col, CELL_O);
+	Set(aiMove);
+	return GetGameState(aiMove);
 }
 
 GameState Game::MakeRandomMove(const AIDifficulty _AIDiff) {
@@ -186,3 +195,97 @@ GameState Game::GetGameState(const Cell& _newCell) {
 	}
 }
 
+Move Game::BestMove(const AIDifficulty _AIDiff) {
+	srand(time(0));
+	Move curBestMove(-1, -1, -100);
+
+	for (int i = 0; i < RowN(); i++) {
+		for (int j = 0; j < ColN(); j++) {
+			if (GetVal(i, j) == CELL_BLANK) {
+				if (_AIDiff == Easy && (rand() % 100) < 70) {
+					continue;
+				}
+				else if (_AIDiff == Normal && (rand() % 100) < 30) {
+					continue;
+				}
+
+				Set(Cell(i, j, CELL_O));
+
+				int moveScore = Minimax(0, false);
+
+				Set(Cell(i, j, CELL_BLANK));
+
+				if (moveScore > curBestMove.score) {
+					curBestMove = Move(i, j, moveScore);
+				}
+			}
+		}
+	}
+
+	return curBestMove;
+}
+
+int Game::Minimax(const int _depth, const bool _isMaximizing) {
+	Cell lastMove(0, 0, _isMaximizing ? CELL_O : CELL_X);
+	const int rowN = RowN();
+	const int colN = ColN();
+
+	for (int i = 0; i < rowN; i++) {
+		for (int j = 0; j < colN; j++) {
+			if (GetVal(i, j) == CELL_X) {
+				lastMove = Cell(i, j, CELL_X);
+				if (CheckWin(lastMove))
+					return _depth - 10;
+			}
+		}
+	}
+
+	for (int i = 0; i < rowN; i++) {
+		for (int j = 0; j < colN; j++) {
+			if (GetVal(i, j) == CELL_O) {
+				lastMove = Cell(i, j, CELL_O);
+				if (CheckWin(lastMove))
+					return 10 - _depth;
+			}
+		}
+	}
+
+	bool isFull = true;
+	for (int i = 0; i < rowN; i++) {
+		for (int j = 0; j < colN; j++) {
+			if (GetVal(i, j) == CELL_BLANK) {
+				isFull = false;
+				break;
+			}
+		}
+	}
+	if (isFull) 
+		return 0;
+
+	if (_isMaximizing) {
+		int bestScore = -1000;
+		for (int i = 0; i < rowN; i++) {
+			for (int j = 0; j < colN; j++) {
+				if (GetVal(i, j) == CELL_BLANK) {
+					Set(Cell(i, j, CELL_O));
+					bestScore = std::max(bestScore, Minimax(_depth + 1, false));
+					Set(Cell(i, j, CELL_BLANK));
+				}
+			}
+		}
+		return bestScore;
+	}
+	else {
+		int bestScore = 1000;
+		for (int i = 0; i < rowN; i++) {
+			for (int j = 0; j < colN; j++) {
+				if (GetVal(i, j) == CELL_BLANK) {
+					Set(Cell(i, j, CELL_X));
+					bestScore = std::min(bestScore, Minimax(_depth + 1, true));
+					Set(Cell(i, j, CELL_BLANK));
+				}
+			}
+		}
+		return bestScore;
+	}
+}

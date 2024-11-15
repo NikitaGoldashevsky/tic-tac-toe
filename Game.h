@@ -21,16 +21,16 @@ static const enum GameState {
 	Tie
 };
 
-static const struct Cell {
-	const int row;
-	const int col;
-	const char val;
+static struct Cell {
+	int row;
+	int col;
+	char val;
 };
 
 static struct Move {
-	const int row;
-	const int col;
-	const int score;
+	int row;
+	int col;
+	int score;
 };
 
 
@@ -56,6 +56,10 @@ private:
 	const char GetVal(const int _row, const int _col) const;
 
 	GameState MakeRandomMove(const AIDifficulty _AIDiff = AIDifficulty::Normal);
+
+	Move BestMove(const AIDifficulty _AIDiff);
+
+	int Minimax(const int _depth, const bool _isMaximizing);
 
 public:
 	constexpr static char CELL_BLANK = ' ';
