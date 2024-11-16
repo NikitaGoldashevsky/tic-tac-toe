@@ -25,7 +25,7 @@ auto GetButtonId(const int row, const int col) {
 }
 
 namespace BTN {
-    constexpr unsigned short SIZE = 80;
+    constexpr unsigned short SIZE = 85;
     constexpr unsigned short SPACING = 5;
 }
 
@@ -78,6 +78,28 @@ void WndUpdateCells(HWND hWnd) {
     }
 }
 
+void WndTitleSetAIDiffPostfix(HWND hWnd, const AIDiff _AIDiff) {
+    TCHAR diffStr[10];
+
+    switch (_AIDiff)
+    {
+    case easy:
+        _tcscpy_s(diffStr, _T("Easy"));
+        break;
+    case normal:
+        _tcscpy_s(diffStr, _T("Normal"));
+        break;
+    case hard:
+        _tcscpy_s(diffStr, _T("Hard"));
+        break;
+    }
+
+    TCHAR newTitle[256];
+    _stprintf_s(newTitle, _T("Tic-Tac-Toe - %s"), diffStr);
+    SetWindowText(hWnd, newTitle);
+}
+
+
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow) {
     WNDCLASSEX wcex;
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -117,6 +139,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         hInstance,
         NULL
     );
+    WndTitleSetAIDiffPostfix(hWnd, GAME.GetAIDiff());
 
     if (!hWnd) {
         MessageBox(NULL, _T("Call to CreateWindow failed!"), _T("Tic-Tac-Toe"), NULL);
@@ -197,10 +220,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         // 1001, 1002, 1003 are Id's for difficulty submenus
         const auto lw = LOWORD(wParam);
         if (lw >= 1001 && lw <= 1003) {
-            GAME.SetAIDiff(AIDiff(lw % 1000 - 1));
-            WndMenusDiffSetChecked(hWnd, lw);
+            const AIDiff diff = AIDiff(lw % 1000 - 1);
+
+            GAME.SetAIDiff(diff);
+            WndMenusDiffSetChecked(hWnd, diff);
             GAME.ResetField();
             WndUpdateCells(hWnd);
+            WndTitleSetAIDiffPostfix(hWnd, diff);
         }
         else if (lw == ID_NEW_GAME) {
             GAME.ResetField();

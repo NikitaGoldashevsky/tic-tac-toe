@@ -87,6 +87,8 @@ public:
 
 	GameState GetGameState(std::optional<const Cell> _newCell = std::nullopt);
 
+	AIDiff GetAIDiff() const;
+
 	void SetAIDiff(const AIDiff _AIDiff);
 
 	Game(const Game& other) = delete;

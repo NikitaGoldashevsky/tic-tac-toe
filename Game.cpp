@@ -192,6 +192,10 @@ GameState Game::GetGameState(std::optional<const Cell> _newCell) {
 	}
 }
 
+AIDiff Game::GetAIDiff() const {
+	return m_AIDiff;
+}
+
 void Game::SetAIDiff(const AIDiff _AIDiff) {
 	m_AIDiff = _AIDiff;
 }
