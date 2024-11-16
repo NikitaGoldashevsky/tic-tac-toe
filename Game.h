@@ -6,12 +6,14 @@
 #include <stdexcept>
 #include <time.h>
 #include <iostream>
+#include <optional>
 
 
-static const enum AIDifficulty {
-	Easy,
-	Normal,
-	Harrd
+static const enum GameState {
+	ongoing,
+	playerWin,
+	aiWin,
+	tie
 };
 
 static const enum GameState {
@@ -41,6 +43,8 @@ private:
 	const static int m_rowN = 3;
 	const static int m_colN = 3;
 
+	AIDiff m_AIDiff = easy; // Default difficulty
+	GameState lastState = ongoing;
 	std::array<std::array<char, m_colN>, m_rowN> m_field;
 
 	Game();
@@ -81,6 +85,7 @@ public:
 	void Set(const Cell& _cell);
 
 	GameState MakeAIMove(const AIDifficulty _AIDiff = AIDifficulty::Normal);
+	GameState GetGameState(std::optional<const Cell> _newCell = std::nullopt);
 
 	GameState GetGameState(const Cell& _newCell);
 

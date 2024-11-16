@@ -145,14 +145,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 void HandleCellClick(HWND hWnd, const int row, const int col) {
     if (GAME[row][col] != ' ') return;
-    if (GAME.lastState != Ongoing) return;
+    if (GAME.GetGameState() != ongoing) return;
  
     // User move
     const Cell cell(row, col, GAME.CELL_X);
 
     GAME.Set(cell);
     WndUpdateCells(hWnd);
-    if (GAME.GetGameState(cell) == PlayerWin) {
+    if (GAME.GetGameState(cell) == playerWin) {
         MessageBox(hWnd, L"You won!", L":)", MB_OK);
         return;
     }
@@ -160,10 +160,10 @@ void HandleCellClick(HWND hWnd, const int row, const int col) {
     // AI move
     GameState gameState = GAME.MakeAIMove();
     WndUpdateCells(hWnd);
-    if (gameState == AIWin) {
+    if (gameState == aiWin) {
         MessageBox(hWnd, L"You lost!", L":(", MB_OK);
     }
-    else if (gameState == Tie) {
+    else if (gameState == tie) {
         MessageBox(hWnd, L"Tie!", L":|", MB_OK);
     }
 };

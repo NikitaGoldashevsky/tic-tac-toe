@@ -47,7 +47,7 @@ bool Game::DiagLinesCheck(const Cell& _cell) const {
 	const int rowN = RowN();
 	const int colN = ColN();
 
-	int udDiagLineLen = 1; // diagonal like this \
+	int udDiagLineLen = 1; // diagonal line like this \
 	// to right-down
 	for (int r = _row + 1, c = _col + 1; r < rowN && c < colN; r++, c++) {
 		if (GetVal(r, c) == _val) udDiagLineLen++;
@@ -60,7 +60,7 @@ bool Game::DiagLinesCheck(const Cell& _cell) const {
 	}
 	if (udDiagLineLen >= lineLenWinCond) return true;
 
-	int duDiagLineLen = 1; // diagonal like this /
+	int duDiagLineLen = 1; // diagonal line like this /
 	// to left-down
 	for (int r = _row + 1, c = _col - 1; r < rowN && c >= 0; r++, c--) {
 		if (GetVal(r, c) == _val) duDiagLineLen++;
@@ -109,7 +109,7 @@ void Game::ResetField() {
 			Set(Cell(i, j, CELL_BLANK));
 		}
 	}
-	lastState = Ongoing;
+	lastState = ongoing;
 }
 
 void Game::Set(const Cell& _cell) {
@@ -176,6 +176,11 @@ GameState Game::MakeRandomMove(const AIDifficulty _AIDiff) {
 	}
 }
 
+GameState Game::GetGameState(std::optional<const Cell> _newCell) {
+	if (!_newCell.has_value()) {
+		return lastState;
+}
+
 GameState Game::GetGameState(const Cell& _newCell) {
 	const auto _cellVal = _newCell.val;
 	const bool _won = CheckWin(_newCell);
@@ -184,13 +189,14 @@ GameState Game::GetGameState(const Cell& _newCell) {
 		switch (_cellVal)
 		{
 		case CELL_X:
-			lastState = PlayerWin;
+			lastState = playerWin;
 			return lastState;
 		case CELL_O:
-			lastState = AIWin;
+			lastState = aiWin;
 			return lastState;
 		default:
-			return Ongoing;
+			return ongoing;
+		}
 		}
 	}
 }
