@@ -7,10 +7,13 @@
 // Global variables
 static TCHAR szWindowClass[] = _T("DesktopApp");
 static TCHAR szTitle[] = _T("Tic-Tac-Toe");
+static TCHAR endgameMessageBoxTitle[] = _T("Game Ended");
 HINSTANCE hInst;
 
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+constexpr auto ENDGAME_SLEEP_TIME = 250;
 
 // Buttons' ids
 #define GAME Game::GetGame()
@@ -195,21 +198,30 @@ void HandleCellClick(HWND hWnd, const int row, const int col) {
     // User move
     const Cell cell(row, col, GAME.CELL_X);
 
+    int mbResult = 0;
+
     GAME.Set(cell);
     WndUpdateCells(hWnd);
     if (GAME.GetGameState(cell) == playerWin) {
-        MessageBox(hWnd, L"You won!", L":)", MB_OK);
-        return;
+        Sleep(ENDGAME_SLEEP_TIME);
+        mbResult = MessageBox(hWnd, L"You won!\nStart a new game?", endgameMessageBoxTitle, MB_OKCANCEL);
+    }
+    else {
+        GameState gameState = GAME.MakeAIMove();
+        WndUpdateCells(hWnd);
+        if (gameState == aiWin) {
+            Sleep(ENDGAME_SLEEP_TIME);
+            mbResult = MessageBox(hWnd, L"You lost!\nStart a new game?", endgameMessageBoxTitle, MB_OKCANCEL);
+        }
+        else if (gameState == tie) {
+            Sleep(ENDGAME_SLEEP_TIME);
+            mbResult = MessageBox(hWnd, L"Tie!\nStart a new game?", endgameMessageBoxTitle, MB_OKCANCEL);
+        }
     }
 
-    // AI move
-    GameState gameState = GAME.MakeAIMove();
-    WndUpdateCells(hWnd);
-    if (gameState == aiWin) {
-        MessageBox(hWnd, L"You lost!", L":(", MB_OK);
-    }
-    else if (gameState == tie) {
-        MessageBox(hWnd, L"Tie!", L":|", MB_OK);
+    if (mbResult == IDOK) {
+        GAME.ResetField();
+        WndUpdateCells(hWnd);
     }
 };
 
