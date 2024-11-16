@@ -204,22 +204,22 @@ void HandleCellClick(HWND hWnd, const int row, const int col) {
     WndUpdateCells(hWnd);
     if (GAME.GetGameState(cell) == playerWin) {
         Sleep(ENDGAME_SLEEP_TIME);
-        mbResult = MessageBox(hWnd, L"You won!\nStart a new game?", endgameMessageBoxTitle, MB_OKCANCEL);
+        mbResult = MessageBox(hWnd, L"You won!\nStart a new game?", endgameMessageBoxTitle, MB_YESNO);
     }
     else {
         GameState gameState = GAME.MakeAIMove();
         WndUpdateCells(hWnd);
         if (gameState == aiWin) {
             Sleep(ENDGAME_SLEEP_TIME);
-            mbResult = MessageBox(hWnd, L"You lost!\nStart a new game?", endgameMessageBoxTitle, MB_OKCANCEL);
+            mbResult = MessageBox(hWnd, L"You lost!\nStart a new game?", endgameMessageBoxTitle, MB_YESNO);
         }
         else if (gameState == tie) {
             Sleep(ENDGAME_SLEEP_TIME);
-            mbResult = MessageBox(hWnd, L"Tie!\nStart a new game?", endgameMessageBoxTitle, MB_OKCANCEL);
+            mbResult = MessageBox(hWnd, L"Tie!\nStart a new game?", endgameMessageBoxTitle, MB_YESNO);
         }
     }
 
-    if (mbResult == IDOK) {
+    if (mbResult == IDYES) {
         GAME.ResetField();
         WndUpdateCells(hWnd);
     }
