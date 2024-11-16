@@ -113,6 +113,7 @@ void Game::ResetField() {
 }
 
 void Game::Set(const Cell& _cell) {
+	//const auto [_row, _col, _val] = _cell;
 	const auto _row = _cell.row;
 	const auto _col = _cell.col;
 	const auto _val = _cell.val;
@@ -140,14 +141,14 @@ GameState Game::MakeAIMove() {
 
 const int Game::BlankCellsCount() const {
 	int blankCount = 0;
-		for (int i = 0; i < RowN(); i++) {
-			for (int j = 0; j < ColN(); j++) {
-				if (this->operator[](i)[j] == CELL_BLANK)
-					blankCount++;
-			}
+	for (int i = 0; i < RowN(); i++) {
+		for (int j = 0; j < ColN(); j++) {
+			if (this->operator[](i)[j] == CELL_BLANK)
+				blankCount++;
 		}
-		return blankCount;
 	}
+	return blankCount;
+}
 
 const Move Game::RandomMove() {
 	srand(time(0));
@@ -171,7 +172,7 @@ const Move Game::RandomMove() {
 GameState Game::GetGameState(std::optional<const Cell> _newCell) {
 	if (!_newCell.has_value()) {
 		return lastState;
-}
+	}
 
 	const auto _cellVal = _newCell.value().val;
 	const bool _won = CheckWin(_newCell.value());
@@ -188,8 +189,8 @@ GameState Game::GetGameState(std::optional<const Cell> _newCell) {
 		default:
 			return ongoing;
 		}
-		}
 	}
+}
 
 void Game::SetAIDiff(const AIDiff _AIDiff) {
 	m_AIDiff = _AIDiff;

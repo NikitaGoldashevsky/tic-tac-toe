@@ -12,9 +12,12 @@ HINSTANCE hInst;
 // Forward declarations of functions included in this code module:
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+// Buttons' ids
 #define GAME Game::GetGame()
-
-constexpr auto OnNewGameClicked = 1;
+constexpr auto ID_NEW_GAME = 1;
+constexpr auto ID_DIFF_EASY = 1001;
+constexpr auto ID_DIFF_NORMAL = 1002;
+constexpr auto ID_DIFF_HARD = 1003;
 
 constexpr auto BUTTON_ID_OFFSET = 100;
 auto GetButtonId(const int row, const int col) {
@@ -41,9 +44,28 @@ namespace MAINWND {
 }
 
 void WndAddMenus(HWND hWnd) {
-    HMENU RootMenu = CreateMenu();
-    AppendMenu(RootMenu, MF_STRING, OnNewGameClicked, _T("New game"));
-    SetMenu(hWnd, RootMenu);
+    HMENU rootMenu = CreateMenu();
+    AppendMenu(rootMenu, MF_STRING, ID_NEW_GAME, _T("New game"));
+
+    HMENU hSubMenu = CreatePopupMenu();
+    AppendMenu(hSubMenu, MF_STRING, ID_DIFF_EASY, L"Easy");
+    AppendMenu(hSubMenu, MF_STRING | MF_CHECKED, ID_DIFF_NORMAL, L"Normal");
+    AppendMenu(hSubMenu, MF_STRING, ID_DIFF_HARD, L"Hard");
+    AppendMenu(rootMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Difficulty");
+
+    SetMenu(hWnd, rootMenu);
+}
+
+inline void WndMenusDiffSetChecked(HWND hWnd, const auto lw) {
+    HMENU hMenu = GetMenu(hWnd);
+    HMENU hSubMenu = GetSubMenu(hMenu, 1);
+
+    CheckMenuItem(hSubMenu, ID_DIFF_EASY, MF_UNCHECKED);
+    CheckMenuItem(hSubMenu, ID_DIFF_NORMAL, MF_UNCHECKED);
+    CheckMenuItem(hSubMenu, ID_DIFF_HARD, MF_UNCHECKED);
+
+    // Check the selected item
+    CheckMenuItem(hSubMenu, lw, MF_CHECKED);
 }
 
 void WndUpdateCells(HWND hWnd) {
@@ -172,18 +194,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     switch (message) {
     case WM_COMMAND:
     {
-        if (LOWORD(wParam) == OnNewGameClicked) {
+        // 1001, 1002, 1003 are Id's for difficulty submenus
+        const auto lw = LOWORD(wParam);
+        if (lw >= 1001 && lw <= 1003) {
+            GAME.SetAIDiff(AIDiff(lw % 1000 - 1));
+            WndMenusDiffSetChecked(hWnd, lw);
+            GAME.ResetField();
+            WndUpdateCells(hWnd);
+        }
+        else if (lw == ID_NEW_GAME) {
             GAME.ResetField();
             WndUpdateCells(hWnd);
             //MessageBox(hWnd, L"Field has been reset!", L"New game", MB_OK);
         }
-        
         else if (HIWORD(wParam) == BN_CLICKED) {
             int buttonId = LOWORD(wParam);
             
             const int id = buttonId - BUTTON_ID_OFFSET;
             if (id < 0 || id >= GAME.RowN() * GAME.ColN()) {
-                break; // incorrect buttonId
+                break; // Incorrect button Id
             }
 
             const int row = id / GAME.ColN();  
