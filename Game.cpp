@@ -125,23 +125,21 @@ void Game::Set(const Cell& _cell) {
 	}
 }
 
-GameState Game::MakeAIMove(const AIDifficulty _AIDiff) {
-	//return MakeRandomMove(_AIDiff);
-	Move bestMove = BestMove(_AIDiff);
-
-	if (bestMove.row == -1 || bestMove.col == -1) {
-		lastState = Tie;
-		return Tie;
+GameState Game::MakeAIMove() {
+	if (BlankCellsCount() == 0) {
+		lastState = tie;
+		return lastState;
 	}
 
-	const Cell aiMove(bestMove.row, bestMove.col, CELL_O);
-	Set(aiMove);
-	return GetGameState(aiMove);
+	Move move = BestMove();
+
+	const Cell moveCell(move.row, move.col, CELL_O);
+	Set(moveCell);
+	return GetGameState(moveCell);
 }
 
-GameState Game::MakeRandomMove(const AIDifficulty _AIDiff) {
-	const auto FPCountBlank = [this]() -> size_t {
-		size_t blankCount = 0;
+const int Game::BlankCellsCount() const {
+	int blankCount = 0;
 		for (int i = 0; i < RowN(); i++) {
 			for (int j = 0; j < ColN(); j++) {
 				if (this->operator[](i)[j] == CELL_BLANK)
@@ -149,24 +147,18 @@ GameState Game::MakeRandomMove(const AIDifficulty _AIDiff) {
 			}
 		}
 		return blankCount;
-		};
-	const auto blankCount = FPCountBlank();
-	if (blankCount == 0) {
-		lastState = Tie;
-		return Tie;
 	}
 
+const Move Game::RandomMove() {
 	srand(time(0));
-	const int blankInd = rand() % blankCount;
+	const int blankInd = rand() % BlankCellsCount();
 
 	int curBlankInd = 0;
 	for (size_t i = 0; i < RowN(); i++) {
 		for (size_t j = 0; j < ColN(); j++) {
 			if (GetVal(i, j) == CELL_BLANK) {
 				if (curBlankInd == blankInd) {
-					Cell newCell(i, j, CELL_O);
-					Set(newCell);
-					return GetGameState(newCell);
+					return Move(i, j, 0);
 				}
 				else {
 					curBlankInd++;
@@ -181,9 +173,8 @@ GameState Game::GetGameState(std::optional<const Cell> _newCell) {
 		return lastState;
 }
 
-GameState Game::GetGameState(const Cell& _newCell) {
-	const auto _cellVal = _newCell.val;
-	const bool _won = CheckWin(_newCell);
+	const auto _cellVal = _newCell.value().val;
+	const bool _won = CheckWin(_newCell.value());
 
 	if (_won) {
 		switch (_cellVal)
@@ -199,19 +190,22 @@ GameState Game::GetGameState(const Cell& _newCell) {
 		}
 		}
 	}
+
+void Game::SetAIDiff(const AIDiff _AIDiff) {
+	m_AIDiff = _AIDiff;
 }
 
-Move Game::BestMove(const AIDifficulty _AIDiff) {
+Move Game::BestMove() {
 	srand(time(0));
-	Move curBestMove(-1, -1, -100);
+	Move curBestMove(-1, -1, -1000);
 
 	for (int i = 0; i < RowN(); i++) {
 		for (int j = 0; j < ColN(); j++) {
 			if (GetVal(i, j) == CELL_BLANK) {
-				if (_AIDiff == Easy && (rand() % 100) < 70) {
+				if (m_AIDiff == easy && (rand() % 100) < 70) {
 					continue;
 				}
-				else if (_AIDiff == Normal && (rand() % 100) < 30) {
+				else if (m_AIDiff == normal && (rand() % 100) < 30) {
 					continue;
 				}
 
@@ -228,7 +222,7 @@ Move Game::BestMove(const AIDifficulty _AIDiff) {
 		}
 	}
 
-	return curBestMove;
+	return curBestMove.score != -1000 ? curBestMove : RandomMove();
 }
 
 int Game::Minimax(const int _depth, const bool _isMaximizing) {

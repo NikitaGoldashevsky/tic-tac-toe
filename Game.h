@@ -16,14 +16,13 @@ static const enum GameState {
 	tie
 };
 
-static const enum GameState {
-	Ongoing,
-	PlayerWin,
-	AIWin,
-	Tie
+static enum AIDiff {
+	easy,
+	normal,
+	hard
 };
 
-static struct Cell {
+struct Cell {
 	int row;
 	int col;
 	char val;
@@ -43,7 +42,7 @@ private:
 	const static int m_rowN = 3;
 	const static int m_colN = 3;
 
-	AIDiff m_AIDiff = easy; // Default difficulty
+	AIDiff m_AIDiff = normal; // Default AI difficulty
 	GameState lastState = ongoing;
 	std::array<std::array<char, m_colN>, m_rowN> m_field;
 
@@ -59,18 +58,18 @@ private:
 
 	const char GetVal(const int _row, const int _col) const;
 
-	GameState MakeRandomMove(const AIDifficulty _AIDiff = AIDifficulty::Normal);
+	const Move RandomMove();
 
-	Move BestMove(const AIDifficulty _AIDiff);
+	Move BestMove();
 
 	int Minimax(const int _depth, const bool _isMaximizing);
+
+	const int BlankCellsCount() const;
 
 public:
 	constexpr static char CELL_BLANK = ' ';
 	constexpr static char CELL_X = 'X';
 	constexpr static char CELL_O = 'O';
-
-	GameState lastState = Ongoing;
 
 	constexpr const short RowN() const;
 
@@ -84,10 +83,11 @@ public:
 
 	void Set(const Cell& _cell);
 
-	GameState MakeAIMove(const AIDifficulty _AIDiff = AIDifficulty::Normal);
+	GameState MakeAIMove();
+
 	GameState GetGameState(std::optional<const Cell> _newCell = std::nullopt);
 
-	GameState GetGameState(const Cell& _newCell);
+	void SetAIDiff(const AIDiff _AIDiff);
 
 	Game(const Game& other) = delete;
 	Game(Game&& other) = delete;
