@@ -113,17 +113,8 @@ void Game::ResetField() {
 }
 
 void Game::Set(const Cell& _cell) {
-	//const auto [_row, _col, _val] = _cell;
-	const auto _row = _cell.row;
-	const auto _col = _cell.col;
-	const auto _val = _cell.val;
-
-	if (_val == CELL_BLANK || _val == CELL_X || _val == CELL_O) {
-		m_field[_row][_col] = _val;
-	}
-	else {
-		throw std::invalid_argument("");
-	}
+	const auto [_row, _col, _val] = _cell;
+	m_field[_row][_col] = _val;
 }
 
 GameState Game::MakeAIMove() {
@@ -144,7 +135,7 @@ const int Game::BlankCellsCount() const {
 	int blankCount = 0;
 	for (int i = 0; i < RowN(); i++) {
 		for (int j = 0; j < ColN(); j++) {
-			if (this->operator[](i)[j] == CELL_BLANK)
+			if (GetVal(i, j) == CELL_BLANK)
 				blankCount++;
 		}
 	}
@@ -187,10 +178,10 @@ GameState Game::GetGameState(std::optional<const Cell> _newCell) {
 		case CELL_O:
 			lastState = aiWin;
 			return lastState;
-		default:
-			return ongoing;
 		}
 	}
+
+	return BlankCellsCount() == 0 ? tie : ongoing;
 }
 
 AIDiff Game::GetAIDiff() const {
