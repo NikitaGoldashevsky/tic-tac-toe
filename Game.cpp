@@ -132,6 +132,7 @@ GameState Game::MakeAIMove() {
 		return lastState;
 	}
 
+	m_minimaxStarted = std::chrono::high_resolution_clock::now();
 	Move move = BestMove();
 
 	const Cell moveCell(move.row, move.col, CELL_O);
@@ -215,9 +216,7 @@ Move Game::BestMove() {
 				}
 
 				Set(Cell(i, j, CELL_O));
-
-				int moveScore = Minimax(0, false);
-
+				int moveScore = Minimax(0, INT_MIN, INT_MAX, false);
 				Set(Cell(i, j, CELL_BLANK));
 
 				if (moveScore > curBestMove.score) {
@@ -230,7 +229,21 @@ Move Game::BestMove() {
 	return curBestMove.score != -1000 ? curBestMove : RandomMove();
 }
 
-int Game::Minimax(const int _depth, const bool _isMaximizing) {
+int Game::GetSearchDepth() const {
+	const int emptyCells = BlankCellsCount();
+	if (emptyCells > 12) return 3;
+	if (emptyCells > 8) return 4;
+	if (emptyCells > 4) return 6;
+	return 8;
+}
+
+int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximizing) {
+	auto now = std::chrono::high_resolution_clock::now();
+	if (std::chrono::duration_cast<std::chrono::milliseconds>(now - m_minimaxStarted).count() > MINIMAX_TIME_LIMIT)
+		return _isMaximizing ? -1000 : 1000;
+	if (_depth >= GetSearchDepth()) 
+		return _isMaximizing ? -1000 : 1000;
+
 	Cell lastMove(0, 0, _isMaximizing ? CELL_O : CELL_X);
 	const int rowN = RowN();
 	const int colN = ColN();
@@ -273,8 +286,15 @@ int Game::Minimax(const int _depth, const bool _isMaximizing) {
 			for (int j = 0; j < colN; j++) {
 				if (GetVal(i, j) == CELL_BLANK) {
 					Set(Cell(i, j, CELL_O));
-					bestScore = std::max(bestScore, Minimax(_depth + 1, false));
+					const int score = Minimax(_depth + 1, _alpha, _beta, false);
 					Set(Cell(i, j, CELL_BLANK));
+
+					bestScore = std::max(bestScore, score);
+
+					_alpha = std::max(_alpha, score);
+					if (_beta <= _alpha) {
+						return bestScore;
+					}
 				}
 			}
 		}
@@ -286,8 +306,15 @@ int Game::Minimax(const int _depth, const bool _isMaximizing) {
 			for (int j = 0; j < colN; j++) {
 				if (GetVal(i, j) == CELL_BLANK) {
 					Set(Cell(i, j, CELL_X));
-					bestScore = std::min(bestScore, Minimax(_depth + 1, true));
+					const int score = Minimax(_depth + 1, _alpha, _beta, true);
 					Set(Cell(i, j, CELL_BLANK));
+
+					bestScore = std::min(bestScore, score);
+
+					_beta = std::min(_beta, score);
+					if (_beta <= _alpha) {
+						return bestScore;
+					}
 				}
 			}
 		}
