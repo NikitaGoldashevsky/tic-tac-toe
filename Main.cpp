@@ -18,9 +18,11 @@ constexpr auto ENDGAME_SLEEP_TIME = 250;
 // Buttons' ids
 #define GAME Game::GetGame()
 constexpr auto ID_NEW_GAME = 1;
-constexpr auto ID_DIFF_EASY = 1001;
-constexpr auto ID_DIFF_NORMAL = 1002;
-constexpr auto ID_DIFF_HARD = 1003;
+
+constexpr auto DIFF_ID_OFFSET = 1000;
+constexpr auto ID_DIFF_EASY = 1 + DIFF_ID_OFFSET;
+constexpr auto ID_DIFF_NORMAL = 2 + DIFF_ID_OFFSET;
+constexpr auto ID_DIFF_HARD = 3 + DIFF_ID_OFFSET;
 
 constexpr auto BUTTON_ID_OFFSET = 100;
 auto GetButtonId(const int row, const int col) {
@@ -46,29 +48,29 @@ namespace MAINWND {
         MARGIN * 2 + LEFT;
 }
 
+inline void WndMenusDiffUpdateChecked(HWND hWnd) {
+    HMENU hMenu = GetMenu(hWnd);
+    HMENU hDiffSubMenu = GetSubMenu(hMenu, 1);
+
+    CheckMenuItem(hDiffSubMenu, ID_DIFF_EASY, MF_UNCHECKED);
+    CheckMenuItem(hDiffSubMenu, ID_DIFF_NORMAL, MF_UNCHECKED);
+    CheckMenuItem(hDiffSubMenu, ID_DIFF_HARD, MF_UNCHECKED);
+
+    CheckMenuItem(hDiffSubMenu, GAME.GetAIDiff() + 1 + DIFF_ID_OFFSET, MF_CHECKED);
+}
+
 void WndAddMenus(HWND hWnd) {
     HMENU rootMenu = CreateMenu();
     AppendMenu(rootMenu, MF_STRING, ID_NEW_GAME, _T("New game"));
 
-    HMENU hSubMenu = CreatePopupMenu();
-    AppendMenu(hSubMenu, MF_STRING, ID_DIFF_EASY, L"Easy");
-    AppendMenu(hSubMenu, MF_STRING | MF_CHECKED, ID_DIFF_NORMAL, L"Normal");
-    AppendMenu(hSubMenu, MF_STRING, ID_DIFF_HARD, L"Hard");
-    AppendMenu(rootMenu, MF_POPUP, (UINT_PTR)hSubMenu, L"Difficulty");
+    HMENU hDiffSubMenu = CreatePopupMenu();
+    AppendMenu(hDiffSubMenu, MF_STRING, ID_DIFF_EASY, L"Easy");
+    AppendMenu(hDiffSubMenu, MF_STRING, ID_DIFF_NORMAL, L"Normal");
+    AppendMenu(hDiffSubMenu, MF_STRING, ID_DIFF_HARD, L"Hard");
+    AppendMenu(rootMenu, MF_POPUP, (UINT_PTR)hDiffSubMenu, L"Difficulty");
 
     SetMenu(hWnd, rootMenu);
-}
-
-inline void WndMenusDiffSetChecked(HWND hWnd, const auto lw) {
-    HMENU hMenu = GetMenu(hWnd);
-    HMENU hSubMenu = GetSubMenu(hMenu, 1);
-
-    CheckMenuItem(hSubMenu, ID_DIFF_EASY, MF_UNCHECKED);
-    CheckMenuItem(hSubMenu, ID_DIFF_NORMAL, MF_UNCHECKED);
-    CheckMenuItem(hSubMenu, ID_DIFF_HARD, MF_UNCHECKED);
-
-    // Check the selected item
-    CheckMenuItem(hSubMenu, lw, MF_CHECKED);
+    WndMenusDiffUpdateChecked(hWnd);
 }
 
 void WndUpdateCells(HWND hWnd) {
@@ -81,10 +83,10 @@ void WndUpdateCells(HWND hWnd) {
     }
 }
 
-void WndTitleSetAIDiffPostfix(HWND hWnd, const AIDiff _AIDiff) {
+void WndTitleUpdateDiffPostfix(HWND hWnd) {
     TCHAR diffStr[10];
 
-    switch (_AIDiff)
+    switch (GAME.GetAIDiff())
     {
     case easy:
         _tcscpy_s(diffStr, _T("Easy"));
@@ -134,7 +136,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         WS_EX_OVERLAPPEDWINDOW,
         szWindowClass,
         szTitle,
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // No WS_THICKFRAME
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         wndPosX, wndPosY,
         MAINWND::WIDTH, MAINWND::HEIGHT, 
         NULL,
@@ -142,7 +144,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         hInstance,
         NULL
     );
-    WndTitleSetAIDiffPostfix(hWnd, GAME.GetAIDiff());
+    WndTitleUpdateDiffPostfix(hWnd);
 
     if (!hWnd) {
         MessageBox(NULL, _T("Call to CreateWindow failed!"), _T("Tic-Tac-Toe"), NULL);
@@ -232,13 +234,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         // 1001, 1002, 1003 are Id's for difficulty submenus
         const auto lw = LOWORD(wParam);
         if (lw >= 1001 && lw <= 1003) {
-            const AIDiff diff = AIDiff(lw % 1000 - 1);
-
-            GAME.SetAIDiff(diff);
-            WndMenusDiffSetChecked(hWnd, diff);
+            GAME.SetAIDiff(AIDiff(lw % 1000 - 1));
+            WndMenusDiffUpdateChecked(hWnd);
             GAME.ResetField();
             WndUpdateCells(hWnd);
-            WndTitleSetAIDiffPostfix(hWnd, diff);
+            WndTitleUpdateDiffPostfix(hWnd);
         }
         else if (lw == ID_NEW_GAME) {
             GAME.ResetField();

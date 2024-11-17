@@ -45,7 +45,7 @@ private:
 	const int MINIMAX_TIME_LIMIT = 5000; // Time in ms
 	std::chrono::steady_clock::time_point m_minimaxStarted;
 
-	AIDiff m_AIDiff = hard; // Default AI difficulty
+	AIDiff m_AIDiff = normal; // Default AI difficulty
 	GameState lastState = ongoing;
 	std::array<std::array<char, m_colN>, m_rowN> m_field;
 
