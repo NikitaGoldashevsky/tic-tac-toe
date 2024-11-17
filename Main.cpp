@@ -150,7 +150,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     }
 
     const short FontSize = 40;
-    HFONT hCellFont = CreateFont(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    HFONT hCellFont = CreateFont(FontSize, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
 
