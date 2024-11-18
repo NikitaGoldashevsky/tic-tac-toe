@@ -99,11 +99,15 @@ Game& Game::GetGame() {
 	return m_instance;
 }
 
-const std::array<char, Game::m_colN>& Game::operator [] (const int _row) const {
+const std::vector<char>& Game::operator [] (const int _row) const {
 	return m_field[_row];
 }
 
 void Game::ResetField() {
+	m_field = std::vector<std::vector<char>>(
+		RowN(), std::vector<char>(ColN(), CELL_BLANK)
+	);
+
 	for (int i = 0; i < RowN(); i++) {
 		for (int j = 0; j < ColN(); j++) {
 			Set(Cell(i, j, CELL_BLANK));
@@ -190,6 +194,22 @@ AIDiff Game::GetAIDiff() const {
 
 void Game::SetAIDiff(const AIDiff _AIDiff) {
 	m_AIDiff = _AIDiff;
+}
+
+void Game::SetFieldSize(const FieldOption _fieldOption) {
+	switch (_fieldOption)
+	{
+	case opt33:
+		m_rowN = 3; m_colN = 3;
+		break;
+	case opt44:
+		m_rowN = 4; m_colN = 4;
+		break;
+	case opt55:
+		m_rowN = 5; m_colN = 5;
+		break;
+	}
+	ResetField();
 }
 
 Move Game::BestMove() {

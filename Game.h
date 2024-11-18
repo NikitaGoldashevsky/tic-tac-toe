@@ -1,6 +1,6 @@
 #pragma once
 
-#include <array>
+#include <vector>
 #include <vector>
 #include <utility>
 #include <time.h>
@@ -22,6 +22,12 @@ static enum AIDiff {
 	hard
 };
 
+static const enum FieldOption {
+	opt33,
+	opt44,
+	opt55
+};
+
 struct Cell {
 	int row;
 	int col;
@@ -39,15 +45,18 @@ class Game {
 private:
 	const static int lineLenWinCond = 3;
 
-	const static int m_rowN = 3;
-	const static int m_colN = 3;
+	const static int INIT_ROWN = 3;
+	const static int INIT_COLN = 3;
+
+	int m_rowN = INIT_ROWN;
+	int m_colN = INIT_COLN;
 
 	const int MINIMAX_TIME_LIMIT = 5000; // Time in ms
 	std::chrono::steady_clock::time_point m_minimaxStarted;
 
 	AIDiff m_AIDiff = normal; // Default AI difficulty
 	GameState lastState = ongoing;
-	std::array<std::array<char, m_colN>, m_rowN> m_field;
+	std::vector<std::vector<char>> m_field;
 
 	Game();
 
@@ -82,7 +91,7 @@ public:
 
 	static Game& GetGame();
 
-	const std::array<char, Game::m_colN>& operator[](const int _row) const;
+	const std::vector<char>& operator[](const int _row) const;
 
 	void ResetField();
 
@@ -95,6 +104,8 @@ public:
 	AIDiff GetAIDiff() const;
 
 	void SetAIDiff(const AIDiff _AIDiff);
+
+	void SetFieldSize(const FieldOption _fieldOption);
 
 	Game(const Game& other) = delete;
 	Game(Game&& other) = delete;

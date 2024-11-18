@@ -15,19 +15,28 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 constexpr auto ENDGAME_SLEEP_TIME = 250;
 
-// Buttons' ids
 #define GAME Game::GetGame()
+
+// Buttons' ids
 constexpr auto ID_NEW_GAME = 1;
 
-constexpr auto DIFF_ID_OFFSET = 1000;
+constexpr auto DIFF_ID_OFFSET = 200;
 constexpr auto ID_DIFF_EASY = 1 + DIFF_ID_OFFSET;
 constexpr auto ID_DIFF_NORMAL = 2 + DIFF_ID_OFFSET;
 constexpr auto ID_DIFF_HARD = 3 + DIFF_ID_OFFSET;
+
+constexpr auto FIELD_ID_OFFSET = 300;
+constexpr auto ID_FIELD_1 = 1 + FIELD_ID_OFFSET;
+constexpr auto ID_FIELD_2 = 2 + FIELD_ID_OFFSET;
+constexpr auto ID_FIELD_3 = 3 + FIELD_ID_OFFSET;
 
 constexpr auto BUTTON_ID_OFFSET = 100;
 auto GetButtonId(const int row, const int col) {
     return BUTTON_ID_OFFSET + row * GAME.ColN() + col;
 }
+
+// Button handles vector
+std::vector<HWND> cellButtonHandles;
 
 namespace BTN {
     constexpr unsigned short SIZE = 85;
@@ -38,14 +47,22 @@ namespace MAINWND {
     constexpr unsigned short TOP = 63;
     constexpr unsigned short LEFT = 20;
     constexpr unsigned short MARGIN = 10;
-    unsigned short HEIGHT = 
-        BTN::SIZE * GAME.RowN() +
-        BTN::SPACING * (GAME.RowN() - 1) +
-        MARGIN * 2 + TOP;
-    unsigned short WIDTH = 
-        BTN::SIZE * GAME.ColN() +
-        BTN::SPACING * (GAME.ColN() - 1) +
-        MARGIN * 2 + LEFT;
+
+    inline unsigned short HEIGHT() {
+        return (BTN::SIZE * GAME.RowN() + BTN::SPACING * (GAME.RowN() - 1) +
+            MARGIN * 2 + TOP);
+    }
+    inline unsigned short WIDTH() {
+        return (BTN::SIZE * GAME.ColN() + BTN::SPACING * (GAME.ColN() - 1) +
+            MARGIN * 2 + LEFT);
+    }
+
+    inline unsigned short POSX() {
+        return (GetSystemMetrics(SM_CXSCREEN) - WIDTH()) / 2;
+    }
+    inline unsigned short POSY() {
+        return (GetSystemMetrics(SM_CYSCREEN) - HEIGHT()) / 2;
+    }
 }
 
 inline void WndMenusDiffUpdateChecked(HWND hWnd) {
@@ -59,6 +76,28 @@ inline void WndMenusDiffUpdateChecked(HWND hWnd) {
     CheckMenuItem(hDiffSubMenu, GAME.GetAIDiff() + 1 + DIFF_ID_OFFSET, MF_CHECKED);
 }
 
+inline void WndMenusFieldUpdateChecked(HWND hWnd) {
+    HMENU hMenu = GetMenu(hWnd);
+    HMENU hFieldSubMenu = GetSubMenu(hMenu, 2);
+
+    int optionId = 0;
+    if (GAME.RowN() == 3 && GAME.ColN() == 3) {
+        optionId = 1;
+    }
+    else if (GAME.ColN() == 4 && GAME.RowN() == 4) {
+        optionId = 2;
+    }
+    else if (GAME.ColN() == 5 && GAME.RowN() == 5) {
+        optionId = 3;
+    }
+
+    CheckMenuItem(hFieldSubMenu, ID_FIELD_1, MF_UNCHECKED);
+    CheckMenuItem(hFieldSubMenu, ID_FIELD_2, MF_UNCHECKED);
+    CheckMenuItem(hFieldSubMenu, ID_FIELD_3, MF_UNCHECKED);
+
+    CheckMenuItem(hFieldSubMenu, optionId + FIELD_ID_OFFSET, MF_CHECKED);
+}
+
 void WndAddMenus(HWND hWnd) {
     HMENU rootMenu = CreateMenu();
     AppendMenu(rootMenu, MF_STRING, ID_NEW_GAME, _T("New game"));
@@ -69,8 +108,15 @@ void WndAddMenus(HWND hWnd) {
     AppendMenu(hDiffSubMenu, MF_STRING, ID_DIFF_HARD, L"Hard");
     AppendMenu(rootMenu, MF_POPUP, (UINT_PTR)hDiffSubMenu, L"Difficulty");
 
+    HMENU hFieldSubMenu = CreatePopupMenu();
+    AppendMenu(hFieldSubMenu, MF_STRING, ID_FIELD_1, L"3 x 3");
+    AppendMenu(hFieldSubMenu, MF_STRING, ID_FIELD_2, L"4 x 4");
+    AppendMenu(hFieldSubMenu, MF_STRING, ID_FIELD_3, L"5 x 5");
+    AppendMenu(rootMenu, MF_POPUP, (UINT_PTR)hFieldSubMenu, L"Field");
+
     SetMenu(hWnd, rootMenu);
     WndMenusDiffUpdateChecked(hWnd);
+    WndMenusFieldUpdateChecked(hWnd);
 }
 
 void WndUpdateCells(HWND hWnd) {
@@ -104,6 +150,42 @@ void WndTitleUpdateDiffPostfix(HWND hWnd) {
     SetWindowText(hWnd, newTitle);
 }
 
+void RedrawCellButtons(HWND hWnd) {
+    for (auto buttonHandle : cellButtonHandles) {
+        DestroyWindow(buttonHandle);
+    }
+    cellButtonHandles.clear();
+
+    const short FontSize = 40;
+    HFONT hCellFont = CreateFont(FontSize, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
+
+    for (int i = 0; i < GAME.RowN(); i++) {
+        for (int j = 0; j < GAME.ColN(); j++) {
+            std::wstring buttonText(1, GAME[i][j]);
+            int buttonId = GetButtonId(i, j);
+            HWND buttonHandle = CreateWindowW(
+                L"BUTTON",  // Predefined class; Unicode assumed 
+                buttonText.c_str(), // Button text 
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Styles 
+                MAINWND::MARGIN + j * (BTN::SIZE + BTN::SPACING),         // x position 
+                MAINWND::MARGIN + i * (BTN::SIZE + BTN::SPACING),         // y position 
+                BTN::SIZE,  // Button width
+                BTN::SIZE,  // Button height
+                hWnd,       // Parent window
+                (HMENU)buttonId,
+                (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE),
+                NULL // Pointer not needed
+            );
+            SendMessage(buttonHandle, WM_SETFONT, (WPARAM)hCellFont, TRUE);
+            
+            cellButtonHandles.push_back(buttonHandle);
+        }
+    }
+
+    SetWindowPos(hWnd, NULL, MAINWND::POSX(), MAINWND::POSY(), MAINWND::WIDTH(), MAINWND::HEIGHT(), SWP_SHOWWINDOW);
+}
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow) {
     WNDCLASSEX wcex;
@@ -129,8 +211,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    const int wndPosX = (screenWidth - MAINWND::WIDTH) / 2;
-    const int wndPosY = (screenHeight - MAINWND::HEIGHT) / 2;
+    const int wndPosX = (screenWidth - MAINWND::WIDTH()) / 2;
+    const int wndPosY = (screenHeight - MAINWND::HEIGHT()) / 2;
 
     HWND hWnd = CreateWindowEx(
         WS_EX_OVERLAPPEDWINDOW,
@@ -138,7 +220,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         szTitle,
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         wndPosX, wndPosY,
-        MAINWND::WIDTH, MAINWND::HEIGHT, 
+        MAINWND::WIDTH(), MAINWND::HEIGHT(),
         NULL,
         NULL,
         hInstance,
@@ -151,33 +233,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         return 1;
     }
 
-    const short FontSize = 40;
-    HFONT hCellFont = CreateFont(FontSize, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
-
-    // Creating buttons
-    for (int i = 0; i < GAME.RowN(); i++) {
-        for (int j = 0; j < GAME.ColN(); j++) {
-            std::wstring buttonText(1, GAME[i][j]);
-            int buttonId = GetButtonId(i, j);
-            HWND buttonHandle = CreateWindowW(
-                L"BUTTON",  // Predefined class; Unicode assumed 
-                buttonText.c_str(), // Button text 
-                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Styles 
-                MAINWND::MARGIN + j * (BTN::SIZE + BTN::SPACING),         // x position 
-                MAINWND::MARGIN + i * (BTN::SIZE + BTN::SPACING),         // y position 
-                BTN::SIZE,  // Button width
-                BTN::SIZE,  // Button height
-                hWnd,       // Parent window
-                (HMENU)buttonId,
-                (HINSTANCE)GetWindowLongPtrW(hWnd, GWLP_HINSTANCE),
-                NULL // Pointer not needed
-            );      
-            
-            SendMessage(buttonHandle, WM_SETFONT, (WPARAM)hCellFont, TRUE);
-        }
-    }
+    GAME.SetFieldSize(opt33);
+    RedrawCellButtons(hWnd);
 
     WndAddMenus(hWnd);
 
@@ -193,12 +250,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     return (int)msg.wParam;
 }
 
-void HandleCellClick(HWND hWnd, const int row, const int col) {
-    if (GAME[row][col] != ' ') return;
+void HandleCellClick(HWND hWnd, const int _row, const int _col) {
+    if (GAME[_row][_col] != ' ') return;
     if (GAME.GetGameState() != ongoing) return;
  
     // User move
-    const Cell cell(row, col, GAME.CELL_X);
+    const Cell cell(_row, _col, GAME.CELL_X);
 
     int mbResult = 0;
 
@@ -231,14 +288,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
     switch (message) {
     case WM_COMMAND:
     {
-        // 1001, 1002, 1003 are Id's for difficulty submenus
         const auto lw = LOWORD(wParam);
-        if (lw >= 1001 && lw <= 1003) {
-            GAME.SetAIDiff(AIDiff(lw % 1000 - 1));
+        if (DIFF_ID_OFFSET < lw && lw <= DIFF_ID_OFFSET + 3) {
+            GAME.SetAIDiff(AIDiff(lw % DIFF_ID_OFFSET - 1));
             WndMenusDiffUpdateChecked(hWnd);
             GAME.ResetField();
             WndUpdateCells(hWnd);
             WndTitleUpdateDiffPostfix(hWnd);
+        }
+        else if (FIELD_ID_OFFSET < lw && lw <= FIELD_ID_OFFSET + 3) {
+            GAME.SetFieldSize(FieldOption(lw - FIELD_ID_OFFSET - 1));
+            RedrawCellButtons(hWnd);
+            WndUpdateCells(hWnd);
+            WndMenusFieldUpdateChecked(hWnd);
         }
         else if (lw == ID_NEW_GAME) {
             GAME.ResetField();
