@@ -1,8 +1,4 @@
-#include <windows.h>
-#include <tchar.h>
-
-#include "Game.h"
-#include <string>
+#include "pch.h"
 
 // Global variables
 static TCHAR szWindowClass[] = _T("DesktopApp");
