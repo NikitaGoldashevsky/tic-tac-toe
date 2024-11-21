@@ -21,29 +21,26 @@ static const enum FieldOption {
 };
 
 struct Cell {
-	int row;
-	int col;
+	size_t row;
+	size_t col;
 	char val;
 };
 
 static struct Move {
-	int row;
-	int col;
+	size_t row;
+	size_t col;
 	int score;
 };
 
 
 class Game {
 private:
-	const static int lineLenWinCond = 3;
+	const static size_t lineLenWinCond = 3;
 
-	const static int INIT_ROWN = 3;
-	const static int INIT_COLN = 3;
+	size_t m_rowN = 3;
+	size_t m_colN = 3;
 
-	int m_rowN = INIT_ROWN;
-	int m_colN = INIT_COLN;
-
-	const int MINIMAX_TIME_LIMIT = 5000; // Time in ms
+	const size_t MINIMAX_TIME_LIMIT = 5000; // Time in ms
 	std::chrono::steady_clock::time_point m_minimaxStarted;
 
 	AIDiff m_AIDiff = normal; // Default AI difficulty
@@ -60,17 +57,17 @@ private:
 
 	bool CheckWin(const Cell& _cell) const;
 
-	const char GetVal(const int _row, const int _col) const;
+	const char GetVal(const size_t _row, const size_t _col) const;
 
 	const Move RandomMove();
 
 	Move BestMove();
 
-	int Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximizing);
+	int Minimax(const size_t _depth, int _alpha, int _beta, const bool _isMaximizing);
 
-	int GetSearchDepth() const;
+	size_t GetSearchDepth() const;
 
-	const int BlankCellsCount() const;
+	size_t BlankCellsCount() const;
 
 public:
 	constexpr static char CELL_BLANK = ' ';
@@ -83,7 +80,7 @@ public:
 
 	static Game& GetGame();
 
-	const std::vector<char>& operator[](const int _row) const;
+	const std::vector<char>& operator[](const size_t _row) const;
 
 	void ResetField();
 

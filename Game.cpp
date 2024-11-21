@@ -6,9 +6,9 @@ Game::Game() {
 
 bool Game::HorizLineCheck(const Cell& _cell) const {
 	const auto [_row, _col, _val] = _cell;
-	int horizLineLen = 1;
-	const int rowN = RowN();
-	const int colN = ColN();
+	size_t horizLineLen = 1;
+	const size_t rowN = RowN();
+	const size_t colN = ColN();
 
 	// to right
 	for (int c = _col + 1; c < colN; c++) {
@@ -25,9 +25,9 @@ bool Game::HorizLineCheck(const Cell& _cell) const {
 
 bool Game::VertLineCheck(const Cell& _cell) const {
 	const auto [_row, _col, _val] = _cell;
-	int vertLineLen = 1;
-	const int rowN = RowN();
-	const int colN = ColN();
+	size_t vertLineLen = 1;
+	const size_t rowN = RowN();
+	const size_t colN = ColN();
 
 	// to down
 	for (int r = _row + 1; r < rowN; r++) {
@@ -44,8 +44,8 @@ bool Game::VertLineCheck(const Cell& _cell) const {
 
 bool Game::DiagLinesCheck(const Cell& _cell) const {
 	const auto [_row, _col, _val] = _cell;
-	const int rowN = RowN();
-	const int colN = ColN();
+	const size_t rowN = RowN();
+	const size_t colN = ColN();
 
 	int udDiagLineLen = 1; // diagonal line like this \
 	// to right-down
@@ -82,7 +82,7 @@ bool Game::CheckWin(const Cell& _cell) const {
 		DiagLinesCheck(_cell);
 }
 
-const char Game::GetVal(const int _row, const int _col) const {
+const char Game::GetVal(const size_t _row, const size_t _col) const {
 	return operator[](_row)[_col];
 }
 
@@ -99,7 +99,7 @@ Game& Game::GetGame() {
 	return m_instance;
 }
 
-const std::vector<char>& Game::operator [] (const int _row) const {
+const std::vector<char>& Game::operator [] (const size_t _row) const {
 	return m_field[_row];
 }
 
@@ -108,8 +108,8 @@ void Game::ResetField() {
 		RowN(), std::vector<char>(ColN(), CELL_BLANK)
 	);
 
-	for (int i = 0; i < RowN(); i++) {
-		for (int j = 0; j < ColN(); j++) {
+	for (size_t i = 0; i < RowN(); i++) {
+		for (size_t j = 0; j < ColN(); j++) {
 			Set(Cell(i, j, CELL_BLANK));
 		}
 	}
@@ -135,10 +135,10 @@ GameState Game::MakeAIMove() {
 	return GetGameState(moveCell);
 }
 
-const int Game::BlankCellsCount() const {
+size_t Game::BlankCellsCount() const {
 	int blankCount = 0;
-	for (int i = 0; i < RowN(); i++) {
-		for (int j = 0; j < ColN(); j++) {
+	for (size_t i = 0; i < RowN(); i++) {
+		for (size_t j = 0; j < ColN(); j++) {
 			if (GetVal(i, j) == CELL_BLANK)
 				blankCount++;
 		}
@@ -148,7 +148,7 @@ const int Game::BlankCellsCount() const {
 
 const Move Game::RandomMove() {
 	srand(time(0));
-	const int blankInd = rand() % BlankCellsCount();
+	const size_t blankInd = rand() % BlankCellsCount();
 
 	int curBlankInd = 0;
 	for (size_t i = 0; i < RowN(); i++) {
@@ -170,7 +170,7 @@ GameState Game::GetGameState(std::optional<const Cell> _newCell) {
 		return lastState;
 	}
 
-	const auto _cellVal = _newCell.value().val;
+	const char _cellVal = _newCell.value().val;
 	const bool _won = CheckWin(_newCell.value());
 
 	if (_won) {
@@ -216,8 +216,8 @@ Move Game::BestMove() {
 	srand(time(0));
 	Move curBestMove(-1, -1, -1000);
 
-	for (int i = 0; i < RowN(); i++) {
-		for (int j = 0; j < ColN(); j++) {
+	for (size_t i = 0; i < RowN(); i++) {
+		for (size_t j = 0; j < ColN(); j++) {
 			if (GetVal(i, j) == CELL_BLANK) {
 				if (m_AIDiff == easy && (rand() % 100) < 70) {
 					continue;
@@ -240,15 +240,15 @@ Move Game::BestMove() {
 	return curBestMove.score != -1000 ? curBestMove : RandomMove();
 }
 
-int Game::GetSearchDepth() const {
-	const int emptyCells = BlankCellsCount();
-	if (emptyCells > 12) return 3;
-	if (emptyCells > 8) return 4;
-	if (emptyCells > 4) return 6;
+size_t Game::GetSearchDepth() const {
+	const size_t blankCellsNum = BlankCellsCount();
+	if (blankCellsNum > 12) return 3;
+	if (blankCellsNum > 8) return 4;
+	if (blankCellsNum > 4) return 6;
 	return 8;
 }
 
-int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximizing) {
+int Game::Minimax(const size_t _depth, int _alpha, int _beta, const bool _isMaximizing) {
 	auto now = std::chrono::high_resolution_clock::now();
 	if (std::chrono::duration_cast<std::chrono::milliseconds>(now - m_minimaxStarted).count() > MINIMAX_TIME_LIMIT)
 		return _isMaximizing ? -1000 : 1000;
@@ -256,11 +256,11 @@ int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximiz
 		return _isMaximizing ? -1000 : 1000;
 
 	Cell lastMove(0, 0, _isMaximizing ? CELL_O : CELL_X);
-	const int rowN = RowN();
-	const int colN = ColN();
+	const size_t rowN = RowN();
+	const size_t colN = ColN();
 
-	for (int i = 0; i < rowN; i++) {
-		for (int j = 0; j < colN; j++) {
+	for (size_t i = 0; i < rowN; i++) {
+		for (size_t j = 0; j < colN; j++) {
 			if (GetVal(i, j) == CELL_X) {
 				lastMove = Cell(i, j, CELL_X);
 				if (CheckWin(lastMove))
@@ -269,8 +269,8 @@ int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximiz
 		}
 	}
 
-	for (int i = 0; i < rowN; i++) {
-		for (int j = 0; j < colN; j++) {
+	for (size_t i = 0; i < rowN; i++) {
+		for (size_t j = 0; j < colN; j++) {
 			if (GetVal(i, j) == CELL_O) {
 				lastMove = Cell(i, j, CELL_O);
 				if (CheckWin(lastMove))
@@ -280,8 +280,8 @@ int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximiz
 	}
 
 	bool isFull = true;
-	for (int i = 0; i < rowN; i++) {
-		for (int j = 0; j < colN; j++) {
+	for (size_t i = 0; i < rowN; i++) {
+		for (size_t j = 0; j < colN; j++) {
 			if (GetVal(i, j) == CELL_BLANK) {
 				isFull = false;
 				break;
@@ -293,8 +293,8 @@ int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximiz
 
 	if (_isMaximizing) {
 		int bestScore = -1000;
-		for (int i = 0; i < rowN; i++) {
-			for (int j = 0; j < colN; j++) {
+		for (size_t i = 0; i < rowN; i++) {
+			for (size_t j = 0; j < colN; j++) {
 				if (GetVal(i, j) == CELL_BLANK) {
 					Set(Cell(i, j, CELL_O));
 					const int score = Minimax(_depth + 1, _alpha, _beta, false);
@@ -313,8 +313,8 @@ int Game::Minimax(const int _depth, int _alpha, int _beta, const bool _isMaximiz
 	}
 	else {
 		int bestScore = 1000;
-		for (int i = 0; i < rowN; i++) {
-			for (int j = 0; j < colN; j++) {
+		for (size_t i = 0; i < rowN; i++) {
+			for (size_t j = 0; j < colN; j++) {
 				if (GetVal(i, j) == CELL_BLANK) {
 					Set(Cell(i, j, CELL_X));
 					const int score = Minimax(_depth + 1, _alpha, _beta, true);

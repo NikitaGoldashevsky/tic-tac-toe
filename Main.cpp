@@ -14,20 +14,20 @@ constexpr auto ENDGAME_SLEEP_TIME = 250;
 #define GAME Game::GetGame()
 
 // Buttons' ids
-constexpr auto ID_NEW_GAME = 1;
+constexpr size_t ID_NEW_GAME = 1;
 
-constexpr auto DIFF_ID_OFFSET = 200;
-constexpr auto ID_DIFF_EASY = 1 + DIFF_ID_OFFSET;
-constexpr auto ID_DIFF_NORMAL = 2 + DIFF_ID_OFFSET;
-constexpr auto ID_DIFF_HARD = 3 + DIFF_ID_OFFSET;
+constexpr size_t DIFF_ID_OFFSET = 200;
+constexpr size_t ID_DIFF_EASY = 1 + DIFF_ID_OFFSET;
+constexpr size_t ID_DIFF_NORMAL = 2 + DIFF_ID_OFFSET;
+constexpr size_t ID_DIFF_HARD = 3 + DIFF_ID_OFFSET;
 
-constexpr auto FIELD_ID_OFFSET = 300;
-constexpr auto ID_FIELD_1 = 1 + FIELD_ID_OFFSET;
-constexpr auto ID_FIELD_2 = 2 + FIELD_ID_OFFSET;
-constexpr auto ID_FIELD_3 = 3 + FIELD_ID_OFFSET;
+constexpr size_t FIELD_ID_OFFSET = 300;
+constexpr size_t ID_FIELD_1 = 1 + FIELD_ID_OFFSET;
+constexpr size_t ID_FIELD_2 = 2 + FIELD_ID_OFFSET;
+constexpr size_t ID_FIELD_3 = 3 + FIELD_ID_OFFSET;
 
-constexpr auto BUTTON_ID_OFFSET = 100;
-auto GetButtonId(const int row, const int col) {
+constexpr size_t BUTTON_ID_OFFSET = 100;
+size_t GetButtonId(const int row, const int col) {
     return BUTTON_ID_OFFSET + row * GAME.ColN() + col;
 }
 
@@ -35,28 +35,28 @@ auto GetButtonId(const int row, const int col) {
 std::vector<HWND> cellButtonHandles;
 
 namespace BTN {
-    constexpr unsigned short SIZE = 85;
-    constexpr unsigned short SPACING = 5;
+    constexpr size_t SIZE = 85;
+    constexpr size_t SPACING = 5;
 }
 
 namespace MAINWND {
-    constexpr unsigned short TOP = 63;
-    constexpr unsigned short LEFT = 20;
-    constexpr unsigned short MARGIN = 10;
+    constexpr size_t TOP = 63;
+    constexpr size_t LEFT = 20;
+    constexpr size_t MARGIN = 10;
 
-    inline unsigned short HEIGHT() {
+    inline size_t HEIGHT() {
         return (BTN::SIZE * GAME.RowN() + BTN::SPACING * (GAME.RowN() - 1) +
             MARGIN * 2 + TOP);
     }
-    inline unsigned short WIDTH() {
+    inline size_t WIDTH() {
         return (BTN::SIZE * GAME.ColN() + BTN::SPACING * (GAME.ColN() - 1) +
             MARGIN * 2 + LEFT);
     }
 
-    inline unsigned short POSX() {
+    inline size_t POSX() {
         return (GetSystemMetrics(SM_CXSCREEN) - WIDTH()) / 2;
     }
-    inline unsigned short POSY() {
+    inline size_t POSY() {
         return (GetSystemMetrics(SM_CYSCREEN) - HEIGHT()) / 2;
     }
 }
@@ -116,9 +116,9 @@ void WndAddMenus(HWND hWnd) {
 }
 
 void WndUpdateCells(HWND hWnd) {
-    for (int i = 0; i < GAME.RowN(); i++) {
-        for (int j = 0; j < GAME.ColN(); j++) {
-            const int buttonId = GetButtonId(i, j);
+    for (size_t i = 0; i < GAME.RowN(); i++) {
+        for (size_t j = 0; j < GAME.ColN(); j++) {
+            const size_t buttonId = GetButtonId(i, j);
             std::wstring buttonText(1, GAME[i][j]);
             SetDlgItemTextW(hWnd, buttonId, buttonText.c_str());
         }
@@ -147,20 +147,20 @@ void WndTitleUpdateDiffPostfix(HWND hWnd) {
 }
 
 void RedrawCellButtons(HWND hWnd) {
-    for (auto buttonHandle : cellButtonHandles) {
+    for (HWND buttonHandle : cellButtonHandles) {
         DestroyWindow(buttonHandle);
     }
     cellButtonHandles.clear();
 
-    const short FontSize = 40;
+    const size_t FontSize = 40;
     HFONT hCellFont = CreateFont(FontSize, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
 
-    for (int i = 0; i < GAME.RowN(); i++) {
-        for (int j = 0; j < GAME.ColN(); j++) {
+    for (size_t i = 0; i < GAME.RowN(); i++) {
+        for (size_t j = 0; j < GAME.ColN(); j++) {
             std::wstring buttonText(1, GAME[i][j]);
-            int buttonId = GetButtonId(i, j);
+            size_t buttonId = GetButtonId(i, j);
             HWND buttonHandle = CreateWindowW(
                 L"BUTTON",  // Predefined class; Unicode assumed 
                 buttonText.c_str(), // Button text 
@@ -205,10 +205,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
     hInst = hInstance;
 
-    const int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    const int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    const int wndPosX = (screenWidth - MAINWND::WIDTH()) / 2;
-    const int wndPosY = (screenHeight - MAINWND::HEIGHT()) / 2;
+    const size_t screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    const size_t screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    const size_t wndPosX = (screenWidth - MAINWND::WIDTH()) / 2;
+    const size_t wndPosY = (screenHeight - MAINWND::HEIGHT()) / 2;
 
     HWND hWnd = CreateWindowEx(
         WS_EX_OVERLAPPEDWINDOW,
@@ -246,7 +246,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     return (int)msg.wParam;
 }
 
-void HandleCellClick(HWND hWnd, const int _row, const int _col) {
+void HandleCellClick(HWND hWnd, const size_t _row, const size_t _col) {
     if (GAME[_row][_col] != ' ') return;
     if (GAME.GetGameState() != ongoing) return;
  
@@ -304,15 +304,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             //MessageBox(hWnd, L"Field has been reset!", L"New game", MB_OK);
         }
         else if (HIWORD(wParam) == BN_CLICKED) {
-            int buttonId = LOWORD(wParam);
+            size_t buttonId = LOWORD(wParam);
             
-            const int id = buttonId - BUTTON_ID_OFFSET;
+            const size_t id = buttonId - BUTTON_ID_OFFSET;
             if (id < 0 || id >= GAME.RowN() * GAME.ColN()) {
                 break; // Incorrect button Id
             }
 
-            const int row = id / GAME.ColN();  
-            const int col = id % GAME.ColN();
+            const size_t row = id / GAME.ColN();
+            const size_t col = id % GAME.ColN();
             HandleCellClick(hWnd, row, col);
         }
         break;
